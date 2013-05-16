@@ -1,6 +1,6 @@
 GCC_BIN = ../gcc-arm-none-eabi-4_7-2012q4/bin/
 PROJECT = laserspeed
-OBJECTS = system_LPC17xx.o startup_LPC17xx.o main.o 
+OBJECTS = system_LPC17xx.o startup_LPC17xx.o main.o lcd.o
 SYS_OBJECTS = 
 INCLUDE_PATHS = -I. -I./LPC1768 
 LIBRARY_PATHS = 
