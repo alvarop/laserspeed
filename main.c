@@ -13,6 +13,15 @@ void SysTick_Handler (void) {
   systick_counter++;
 }
 
+void delay_ms(uint32_t delay) {
+  uint32_t limit = systick_counter + delay;
+
+  // WARNING: not taking rollover into account!
+  while(systick_counter < limit) {
+    __WFI();
+  }
+}
+
 int main() {
   
   SystemInit();
@@ -28,6 +37,10 @@ int main() {
   lcd_putc(0xFE);
   lcd_putc(0x1);
 
+  lcd_puts("LaserSpeed v0.1");
+
+  delay_ms(5000);
+
   uint8_t num = 0;
 
   for(;;) {
@@ -36,17 +49,6 @@ int main() {
       LPC_GPIO0->FIOPIN ^= (1 << LED4_PIN);
     }
 
-    if(0 == (systick_counter % 1000)) {
-      // Clear display
-      lcd_putc(0xFE);
-      lcd_putc(0x1);
-
-      lcd_puts("hello");
-      lcd_putc('0' + num++);
-
-      if(num > 9) {
-        num = 0;
-      }
-    }        
+    __WFI();      
   }
 }
