@@ -29,12 +29,45 @@ void delay_ms(uint32_t delay) {
   }
 }
 
-int main() {
+void process_buttons() {
+  static uint8_t button1_count = 0;
+  static uint8_t button2_count = 0;
+  static uint8_t last_buttons = 0;
+  static uint8_t buttons = 0;
 
-  uint8_t button1_count = 0;
-  uint8_t button2_count = 0;
-  uint8_t buttons = 0;
-  uint8_t last_buttons = 0;
+  if((LPC_GPIO0->FIOPIN & (1 << BTN1_PIN)) == 0) {
+    button1_count++;
+    if(button1_count > DEBOUNCE_MS) {
+      buttons |= BUTTON1;
+    }
+  } else {
+    button1_count = 0;
+    buttons &= ~BUTTON1;
+  }
+
+  if((LPC_GPIO0->FIOPIN & (1 << BTN2_PIN)) == 0) {
+    button2_count++;
+    if(button2_count > DEBOUNCE_MS) {
+      buttons |= BUTTON2;
+    }
+  } else {
+    button2_count = 0;
+    buttons &= ~BUTTON2;
+  }
+
+  if(last_buttons != buttons) {
+    last_buttons = buttons;
+    lcd_putc(0xFE); lcd_putc(0x1);
+
+    if(buttons & BUTTON1) {
+      lcd_puts("start");
+    } else if(buttons & BUTTON2) {
+      lcd_puts("stop");
+    }
+  }
+}
+
+int main() {
   
   SystemInit();
 
@@ -64,39 +97,7 @@ int main() {
     }
 
     // Button processing
-    if((LPC_GPIO0->FIOPIN & (1 << BTN1_PIN)) == 0) {
-      button1_count++;
-      if(button1_count > DEBOUNCE_MS) {
-        buttons |= BUTTON1;
-      }
-    } else {
-      button1_count = 0;
-      buttons &= ~BUTTON1;
-    }
-
-    if((LPC_GPIO0->FIOPIN & (1 << BTN2_PIN)) == 0) {
-      button2_count++;
-      if(button2_count > DEBOUNCE_MS) {
-        buttons |= BUTTON2;
-      }
-    } else {
-      button2_count = 0;
-      buttons &= ~BUTTON2;
-    }
-
-    if(last_buttons != buttons) {
-      last_buttons = buttons;
-      lcd_putc(0xFE); lcd_putc(0x1);
-      lcd_puts("button change");
-
-      if(buttons & BUTTON1) {
-        lcd_puts(" 1");
-      }
-
-      if(buttons & BUTTON2) {
-        lcd_puts(" 2");
-      }
-    }
+    process_buttons();
 
     __WFI();      
   }
