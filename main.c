@@ -7,6 +7,13 @@
 
 #define LED4_PIN (22)
 
+#define BTN1_PIN (27)
+#define BTN2_PIN (28)
+
+#define DEBOUNCE_MS (100)
+#define BUTTON1     (1 << 0) 
+#define BUTTON2     (1 << 1)
+
 volatile uint32_t systick_counter = 0;
 
 void SysTick_Handler (void) {
@@ -16,20 +23,29 @@ void SysTick_Handler (void) {
 void delay_ms(uint32_t delay) {
   uint32_t limit = systick_counter + delay;
 
-  // WARNING: not taking rollover into account!
+  // WARNING: not taking overflow into account!
   while(systick_counter < limit) {
     __WFI();
   }
 }
 
 int main() {
+
+  uint8_t button1_count = 0;
+  uint8_t button2_count = 0;
+  uint8_t buttons = 0;
+  uint8_t last_buttons = 0;
   
   SystemInit();
 
   SysTick_Config(SystemCoreClock/1000 - 1); // Generate interrupt each 1 ms
   
-  // Setup P1.23 as output
+  // Setup P0.22 as output
   LPC_GPIO0->FIODIR |= (1 << LED4_PIN);
+
+  // Buttons as inputs
+  LPC_GPIO0->FIODIR &= ~(1 << BTN1_PIN);
+  LPC_GPIO0->FIODIR &= ~(1 << BTN2_PIN);
 
   lcd_init();
 
@@ -39,14 +55,47 @@ int main() {
 
   lcd_puts("LaserSpeed v0.1");
 
-  delay_ms(5000);
-
-  uint8_t num = 0;
+  delay_ms(1000);
 
   for(;;) {
-    if(0 == (systick_counter % 500)) {
+    if(0 == (systick_counter & 0x1FF)) {
       // Toggle LED
       LPC_GPIO0->FIOPIN ^= (1 << LED4_PIN);
+    }
+
+    // Button processing
+    if((LPC_GPIO0->FIOPIN & (1 << BTN1_PIN)) == 0) {
+      button1_count++;
+      if(button1_count > DEBOUNCE_MS) {
+        buttons |= BUTTON1;
+      }
+    } else {
+      button1_count = 0;
+      buttons &= ~BUTTON1;
+    }
+
+    if((LPC_GPIO0->FIOPIN & (1 << BTN2_PIN)) == 0) {
+      button2_count++;
+      if(button2_count > DEBOUNCE_MS) {
+        buttons |= BUTTON2;
+      }
+    } else {
+      button2_count = 0;
+      buttons &= ~BUTTON2;
+    }
+
+    if(last_buttons != buttons) {
+      last_buttons = buttons;
+      lcd_putc(0xFE); lcd_putc(0x1);
+      lcd_puts("button change");
+
+      if(buttons & BUTTON1) {
+        lcd_puts(" 1");
+      }
+
+      if(buttons & BUTTON2) {
+        lcd_puts(" 2");
+      }
     }
 
     __WFI();      
