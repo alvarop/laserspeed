@@ -5,6 +5,7 @@
 #include "LPC17xx.h"
 #include "lcd.h"
 
+#define DETECT_PIN (3)
 #define LED4_PIN (22)
 
 #define BTN1_PIN (27)
@@ -80,6 +81,9 @@ int main() {
   LPC_GPIO0->FIODIR &= ~(1 << BTN1_PIN);
   LPC_GPIO0->FIODIR &= ~(1 << BTN2_PIN);
 
+  // Detect as input
+  LPC_GPIO0->FIODIR &= ~(1 << DETECT_PIN);
+
   lcd_init();
 
   // Clear display
@@ -98,6 +102,10 @@ int main() {
 
     // Button processing
     process_buttons();
+
+    if(LPC_GPIO0->FIOPIN & (1 << DETECT_PIN)) {
+      // detect!
+    }
 
     __WFI();      
   }
