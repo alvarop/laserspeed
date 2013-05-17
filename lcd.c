@@ -37,6 +37,6 @@ void lcd_init() {
 	// GPIO 0.2 -> TXD0
 	LPC_PINCON->PINSEL0 |= (1 << 20);
 
-	// Pull down on GPIO 0.2
+	// No pull down on GPIO 0.2
 	LPC_PINCON->PINMODE0 |= (2 << 20);
 }

@@ -5,6 +5,8 @@
 #include "LPC17xx.h"
 #include "lcd.h"
 
+#define LASER_PIN (0)
+
 #define DETECT_PIN (15)
 #define LED4_PIN (18)
 
@@ -68,6 +70,40 @@ void process_buttons() {
   }
 }
 
+void pwm_init() {
+
+  // PWM1 reset
+  LPC_PWM1->TCR = (1 << 1);
+
+  // Enable PWM1 power
+  LPC_SC->PCONP |= (1 << 6);
+
+  // PWM1 Clock
+  LPC_SC->PCLKSEL0 = (1 << 12); // CCLK/1 = 100MHz
+
+  // GPIO 2.0 -> PWM1.1
+  LPC_PINCON->PINSEL4 |= (1 << 0);
+
+  // No pull down on GPIO 2.0
+  LPC_PINCON->PINMODE4 |= (2 << 0);
+
+  // Reset on MR0
+  LPC_PWM1->MCR = (1 << 1);
+
+  // PWM1 output enabled
+  LPC_PWM1->PCR = (1 << 9);
+
+  // 50% duty cycle, 1 second period
+  LPC_PWM1->MR0 = 100000000;
+  LPC_PWM1->MR1 = 50000000;
+
+  // M0 and M1 latch
+  LPC_PWM1->LER = (1 << 0) | (1 << 1);
+
+  // Enable PWM mode
+  LPC_PWM1->TCR = (1 << 0) | (1 << 3);
+}
+
 int main() {
   
   SystemInit();
@@ -84,6 +120,9 @@ int main() {
   // Detect as input
   LPC_GPIO0->FIODIR &= ~(1 << DETECT_PIN);
 
+  // Laser control output
+  LPC_GPIO2->FIODIR |= (1 << LASER_PIN);
+
   lcd_init();
 
   // Clear display
@@ -91,6 +130,8 @@ int main() {
   lcd_putc(0x1);
 
   lcd_puts("LaserSpeed v0.1");
+
+  pwm_init();
 
   delay_ms(1000);
 
