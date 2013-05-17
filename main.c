@@ -5,11 +5,11 @@
 #include "LPC17xx.h"
 #include "lcd.h"
 
-#define DETECT_PIN (3)
-#define LED4_PIN (22)
+#define DETECT_PIN (15)
+#define LED4_PIN (18)
 
-#define BTN1_PIN (27)
-#define BTN2_PIN (28)
+#define BTN1_PIN (18)
+#define BTN2_PIN (17)
 
 #define DEBOUNCE_MS (100)
 #define BUTTON1     (1 << 0) 
@@ -74,8 +74,8 @@ int main() {
 
   SysTick_Config(SystemCoreClock/1000 - 1); // Generate interrupt each 1 ms
   
-  // Setup P0.22 as output
-  LPC_GPIO0->FIODIR |= (1 << LED4_PIN);
+  // Setup LED as output
+  LPC_GPIO1->FIODIR |= (1 << LED4_PIN);
 
   // Buttons as inputs
   LPC_GPIO0->FIODIR &= ~(1 << BTN1_PIN);
@@ -97,7 +97,7 @@ int main() {
   for(;;) {
     if(0 == (systick_counter & 0x1FF)) {
       // Toggle LED
-      LPC_GPIO0->FIOPIN ^= (1 << LED4_PIN);
+      LPC_GPIO1->FIOPIN ^= (1 << LED4_PIN);
     }
 
     // Button processing

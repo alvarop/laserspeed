@@ -19,7 +19,7 @@ CCLOCAL = gcc
 
 CPU = -mcpu=cortex-m3 -mthumb
 CC_FLAGS = $(CPU) -c -fno-common -fmessage-length=0 -Wall -fno-exceptions -ffunction-sections -fdata-sections -g 
-CC_SYMBOLS = -DTARGET_LPC1769 -DTOOLCHAIN_GCC_ARM -DNDEBUG -D__CORTEX_M3
+CC_SYMBOLS = -DTARGET_LPC1768 -DTOOLCHAIN_GCC_ARM -DNDEBUG -D__CORTEX_M3
 
 LD_FLAGS = -mcpu=cortex-m3 -mthumb -Wl,--gc-sections,-Map=$(PROJECT).map,--cref --specs=nano.specs
 LD_SYS_LIBS = -lc -lgcc -lnosys
@@ -36,7 +36,7 @@ clean:
 
 .c.o:
 	mkdir -p $(BUILD_DIR)
-	$(CC)  $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99   $(INCLUDE_PATHS) -o $(addprefix $(BUILD_DIR), $@) $<
+	$(CC)  $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu99 $(INCLUDE_PATHS) -o $(addprefix $(BUILD_DIR), $@) $<
 
 .cpp.o:
 	mkdir -p $(BUILD_DIR)
