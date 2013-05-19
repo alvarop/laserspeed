@@ -8,6 +8,7 @@
 #include "lcd.h"
 
 #define LASER_PIN1 (0)
+#define LASER_PIN2 (1)
 
 #define DETECT_PIN (15)
 #define LED4_PIN (18)
@@ -104,24 +105,24 @@ void pwm_init(uint32_t period, uint32_t pulse) {
   // PWM1 Clock
   LPC_SC->PCLKSEL0 = (1 << 12); // CCLK/1 = 100MHz
 
-  // GPIO 2.0 -> PWM1.1
-  LPC_PINCON->PINSEL4 |= (1 << 0);
+  // GPIO 2.0 -> PWM1.1 and GPIO 2.1 -> PWM1.2
+  LPC_PINCON->PINSEL4 |= (1 << 0) |  (1 << 2);
 
-  // No pull down on GPIO 2.0
-  LPC_PINCON->PINMODE4 |= (2 << 0);
+  // No pull down on GPIO 2.0 or 2.1
+  LPC_PINCON->PINMODE4 |= (2 << 0) | (2 << 2);
 
   // Stop on MR0
   LPC_PWM1->MCR = (1 << 2);
 
-  // PWM1 output enabled
-  LPC_PWM1->PCR = (1 << 9);
+  // PWM1.1 PWM1.2 output enabled, 1.2 is double eged mode
+  LPC_PWM1->PCR = (1 << 2) | (1 << 9) | (1 << 10);
 
-  // 50% duty cycle, 1 second period
   LPC_PWM1->MR0 = period;
   LPC_PWM1->MR1 = pulse;
+  LPC_PWM1->MR2 = period;
 
-  // M0 and M1 latch
-  LPC_PWM1->LER = (1 << 0) | (1 << 1);
+  // M0, M1, M2 latch
+  LPC_PWM1->LER = (1 << 0) | (1 << 1) | (1 << 2);
 
   // Enable PWM mode
   LPC_PWM1->TCR = (1 << 0) | (1 << 3);
