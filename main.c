@@ -128,6 +128,31 @@ void pwm_init(uint32_t period, uint32_t pulse) {
   LPC_PWM1->TCR = (1 << 0) | (1 << 3);
 }
 
+void print_pulse_width(uint32_t pulse_width) {
+  char* units;
+
+  // Clear screen
+  lcd_putc(0xFE);
+  lcd_putc(0x1);
+
+  if(pulse_width >= 200000000) {
+    units = "s";
+    pulse_width /= 100000000;
+  } else if(pulse_width >= 200000) {
+    units = "ms";
+    pulse_width /= 100000;
+  } else if(pulse_width >= 200) {
+    units = "us";
+    pulse_width /= 100;
+  } else {
+    units = "ns";
+    pulse_width *= 10;
+  }
+
+  sprintf(lcd_buf, "%d %s", pulse_width, units);
+  lcd_puts(lcd_buf);
+}
+
 static volatile uint8_t pulse_received = 0;
 
 int main() {
@@ -209,10 +234,7 @@ int main() {
           pulse_received = 0;
           pulse_misses = 0;
           
-          lcd_putc(0xFE);
-          lcd_putc(0x1);
-          sprintf(lcd_buf, "%d us", pulse_width / 100);
-          lcd_puts(lcd_buf);
+          print_pulse_width(pulse_width);
 
           pulse_width >>= 1;
           
@@ -237,10 +259,7 @@ int main() {
           pulse_received = 0;
           pulse_misses = 0;
           
-          lcd_putc(0xFE);
-          lcd_putc(0x1);
-          sprintf(lcd_buf, "%d us", pulse_width / 100);
-          lcd_puts(lcd_buf);
+          print_pulse_width(pulse_width);
 
           pulse_width += 100;
           
@@ -250,10 +269,8 @@ int main() {
 
           pwm_init(pulse_width * 2, pulse_width);
         } else if(pulse_received) {
-          lcd_putc(0xFE);
-          lcd_putc(0x1);
-          sprintf(lcd_buf, "%d us *", pulse_width / 100);
-          lcd_puts(lcd_buf);
+          print_pulse_width(pulse_width);
+          lcd_puts(" *");
           state = IDLE;
         }
         
