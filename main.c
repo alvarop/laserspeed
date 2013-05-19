@@ -22,8 +22,8 @@
 typedef enum {
   IDLE,
   ALIGN,
-  PULSE,
-  FREQUENCY
+  PULSE_DOWN,
+  PULSE_UP
 } state_t;
 
 volatile uint32_t systick_counter = 0;
@@ -31,6 +31,7 @@ volatile uint32_t systick_counter = 0;
 volatile state_t state = IDLE;
 
 uint32_t pulse_width = 100000000;
+uint32_t pulse_misses = 0;
 
 char lcd_buf[32];
 
@@ -84,11 +85,10 @@ void process_buttons() {
       state = ALIGN;
     } else if(buttons & BUTTON2) {
       pulse_width = 100000000;
-      lcd_putc(0xFE);
-      lcd_putc(0x1);
-      sprintf(lcd_buf, "%d us", pulse_width / 100);
+      lcd_putc(0xFE); lcd_putc(0x1);
+      lcd_puts("Starting");
       pwm_init(pulse_width * 2, pulse_width);
-      state = PULSE;
+      state = PULSE_DOWN;
     }
   }
 }
@@ -202,10 +202,11 @@ int main() {
 
         break;
 
-      case PULSE:
+      case PULSE_DOWN:
         // If pulse is detected, half the pulse width and try again
-        if(pulse_received) {
+        if(pulse_received && !(LPC_PWM1->TCR & (1 << 0))) {
           pulse_received = 0;
+          pulse_misses = 0;
           
           lcd_putc(0xFE);
           lcd_putc(0x1);
@@ -217,16 +218,44 @@ int main() {
           // Turn off LED
           LPC_PINCON->PINSEL4 &= ~(1 << 0);
           LPC_GPIO2->FIOSET |= (1 << 0);
-          
-          delay_ms(500);
+
           pwm_init(pulse_width * 2, pulse_width);
+        } else if(!(LPC_PWM1->TCR & (1 << 0))) {
+          pulse_misses++;
+          if(pulse_misses > 1000) {
+            // Looks like no pulse is coming, let's start searching back up
+            state = PULSE_UP;
+          }
         }
 
-        //state = IDLE;
         break;
 
-      case FREQUENCY: 
+      case PULSE_UP:
+      // If pulse is detected, half the pulse width and try again
+        if(!pulse_received && !(LPC_PWM1->TCR & (1 << 0))) {
+          pulse_received = 0;
+          pulse_misses = 0;
+          
+          lcd_putc(0xFE);
+          lcd_putc(0x1);
+          sprintf(lcd_buf, "%d us", pulse_width / 100);
+          lcd_puts(lcd_buf);
 
+          pulse_width += 100;
+          
+          // Turn off LED
+          LPC_PINCON->PINSEL4 &= ~(1 << 0);
+          LPC_GPIO2->FIOSET |= (1 << 0);
+
+          pwm_init(pulse_width * 2, pulse_width);
+        } else if(pulse_received) {
+          lcd_putc(0xFE);
+          lcd_putc(0x1);
+          sprintf(lcd_buf, "%d us *", pulse_width / 100);
+          lcd_puts(lcd_buf);
+          state = IDLE;
+        }
+        
         break;
     }
 
