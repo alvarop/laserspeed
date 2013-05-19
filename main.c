@@ -172,8 +172,9 @@ int main() {
   LPC_GPIO0->FIODIR &= ~(1 << DETECT_PIN);
 
   // Laser control output
-  LPC_GPIO2->FIODIR |= (1 << LASER_PIN1);
+  LPC_GPIO2->FIODIR |= (1 << LASER_PIN1) | (1 << LASER_PIN2);
   LPC_GPIO2->FIOSET |= (1 << LASER_PIN1);
+  LPC_GPIO2->FIOCLR |= (1 << LASER_PIN2);
 
   lcd_init();
 
@@ -209,8 +210,9 @@ int main() {
 
       case ALIGN: 
         // Set pin as GPIO
-        LPC_PINCON->PINSEL4 &= ~(1 << 0);
+        LPC_PINCON->PINSEL4 &= ~((1 << 0) | (1 << 1));
         LPC_GPIO2->FIOCLR |= (1 << LASER_PIN1);
+        LPC_GPIO2->FIOSET |= (1 << LASER_PIN2);
 
         if(LPC_GPIO0->FIOPIN & (1 << DETECT_PIN)) {
 
@@ -221,7 +223,6 @@ int main() {
           lcd_puts("aligned!");
 
           delay_ms(500);
-          LPC_GPIO2->FIOSET |= (1 << 0);
 
           state = IDLE;
         }
@@ -237,10 +238,6 @@ int main() {
           print_pulse_width(pulse_width);
 
           pulse_width >>= 1;
-          
-          // Turn off LED
-          LPC_PINCON->PINSEL4 &= ~(1 << 0);
-          LPC_GPIO2->FIOSET |= (1 << LASER_PIN1);
 
           pwm_init(pulse_width * 2, pulse_width);
         } else if(!(LPC_PWM1->TCR & (1 << 0))) {
@@ -262,10 +259,6 @@ int main() {
           print_pulse_width(pulse_width);
 
           pulse_width += 100;
-          
-          // Turn off LED
-          LPC_PINCON->PINSEL4 &= ~(1 << 0);
-          LPC_GPIO2->FIOSET |= (1 << LASER_PIN1);
 
           pwm_init(pulse_width * 2, pulse_width);
         } else if(pulse_received) {
