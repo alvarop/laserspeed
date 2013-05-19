@@ -7,7 +7,7 @@
 #include "LPC17xx.h"
 #include "lcd.h"
 
-#define LASER_PIN (0)
+#define LASER_PIN1 (0)
 
 #define DETECT_PIN (15)
 #define LED4_PIN (18)
@@ -146,8 +146,8 @@ int main() {
   LPC_GPIO0->FIODIR &= ~(1 << DETECT_PIN);
 
   // Laser control output
-  LPC_GPIO2->FIODIR |= (1 << LASER_PIN);
-  LPC_GPIO2->FIOSET |= (1 << 0);
+  LPC_GPIO2->FIODIR |= (1 << LASER_PIN1);
+  LPC_GPIO2->FIOSET |= (1 << LASER_PIN1);
 
   lcd_init();
 
@@ -184,7 +184,7 @@ int main() {
       case ALIGN: 
         // Set pin as GPIO
         LPC_PINCON->PINSEL4 &= ~(1 << 0);
-        LPC_GPIO2->FIOCLR |= (1 << 0);
+        LPC_GPIO2->FIOCLR |= (1 << LASER_PIN1);
 
         if(LPC_GPIO0->FIOPIN & (1 << DETECT_PIN)) {
 
@@ -217,7 +217,7 @@ int main() {
           
           // Turn off LED
           LPC_PINCON->PINSEL4 &= ~(1 << 0);
-          LPC_GPIO2->FIOSET |= (1 << 0);
+          LPC_GPIO2->FIOSET |= (1 << LASER_PIN1);
 
           pwm_init(pulse_width * 2, pulse_width);
         } else if(!(LPC_PWM1->TCR & (1 << 0))) {
@@ -245,7 +245,7 @@ int main() {
           
           // Turn off LED
           LPC_PINCON->PINSEL4 &= ~(1 << 0);
-          LPC_GPIO2->FIOSET |= (1 << 0);
+          LPC_GPIO2->FIOSET |= (1 << LASER_PIN1);
 
           pwm_init(pulse_width * 2, pulse_width);
         } else if(pulse_received) {
